@@ -12,6 +12,10 @@ public class BookDTO {
         this.description = description;
     }
 
+    public BookDTO() {
+        // do nothing
+    }
+
     public void setId(int id) {
         this.id = id;
     }
