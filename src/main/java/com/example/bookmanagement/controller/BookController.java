@@ -1,5 +1,6 @@
 package com.example.bookmanagement.controller;
 
+import com.example.bookmanagement.model.BookCreateDTO;
 import com.example.bookmanagement.model.BookDTO;
 import com.example.bookmanagement.model.BookPartialDTO;
 import com.example.bookmanagement.service.BookService;
@@ -27,13 +28,13 @@ public class BookController {
     }
 
     @PostMapping // create book
-    public BookDTO create(@RequestBody BookDTO bookDTO) {
-        return bookService.create(bookDTO);
+    public BookDTO create(@RequestBody BookCreateDTO bookCreateDTO) {
+        return bookService.create(bookCreateDTO);
     }
 
     @PutMapping("{bookId}")
-    public BookDTO update(@PathVariable("bookId") int id, @RequestBody BookDTO bookDTO) {
-        return bookService.update(id, bookDTO);
+    public BookDTO update(@PathVariable("bookId") int id, @RequestBody BookCreateDTO bookCreateDTO) {
+        return bookService.update(id, bookCreateDTO);
     }
 
     @PatchMapping("{bookId}")

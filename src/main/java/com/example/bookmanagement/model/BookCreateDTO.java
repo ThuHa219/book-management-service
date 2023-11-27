@@ -1,20 +1,22 @@
 package com.example.bookmanagement.model;
 
-public class BookDTO {
+import com.example.bookmanagement.domain.User;
+
+public class BookCreateDTO {
 
     private int id;
-    private Integer userId;
+    private int userId;
     private String name;
     private String description;
 
-    public BookDTO(int id, Integer userId, String name, String description) {
+    public BookCreateDTO(int id, int userId, String name, String description) {
         this.id = id;
         this.userId = userId;
         this.name = name;
         this.description = description;
     }
 
-    public BookDTO() {
+    public BookCreateDTO() {
         // do nothing
     }
 
@@ -42,11 +44,20 @@ public class BookDTO {
         return this.description;
     }
 
-    public Integer getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
+
+
+//    public User getUser() {
+//        return user;
+//    }
+//
+//    public void setUser(User user) {
+//        this.user = user;
+//    }
 }

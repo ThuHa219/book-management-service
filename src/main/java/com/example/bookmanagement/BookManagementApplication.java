@@ -1,7 +1,5 @@
 package com.example.bookmanagement;
 
-import com.example.bookmanagement.repository.BookRepository;
-import com.example.bookmanagement.service.BookService;
 import com.example.bookmanagement.test.TestClass;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,6 +18,8 @@ public class BookManagementApplication {
 
 //		BookService service = context.getBean(BookService.class);
 //		TestClass testClass = context.getBean(TestClass.class);
+//		testClass.printBook(1);
+
 //		System.out.println(service.getBookRepository() == testClass.getBookRepository());
 
 //		BookRepository repository = new BookRepository();// spring chỉ tạo ra 1 bean repo duy nhất

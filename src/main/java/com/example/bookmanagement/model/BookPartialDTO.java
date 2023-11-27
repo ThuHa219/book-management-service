@@ -4,6 +4,8 @@ import java.util.Optional;
 
 public class BookPartialDTO {
     private Optional<Integer> id;
+
+    private Optional<Integer> userId;
     private Optional<String> name;
     private Optional<String> description;
 
@@ -17,6 +19,14 @@ public class BookPartialDTO {
 
     public Optional<Integer> getId() {
         return this.id;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = Optional.ofNullable(userId);
+    }
+
+    public Optional<Integer> getUserId() {
+        return this.userId;
     }
 
     public void setName(String name) {

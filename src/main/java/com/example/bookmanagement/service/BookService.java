@@ -1,17 +1,15 @@
 package com.example.bookmanagement.service;
 
 import com.example.bookmanagement.domain.Book;
+import com.example.bookmanagement.domain.User;
+import com.example.bookmanagement.model.BookCreateDTO;
 import com.example.bookmanagement.model.BookDTO;
 import com.example.bookmanagement.model.BookPartialDTO;
 import com.example.bookmanagement.repository.BookRepository;
-import com.fasterxml.jackson.core.*;
+import com.example.bookmanagement.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 
 @Service // stereotype annotation
 public class BookService { // => spring bean
@@ -25,53 +23,63 @@ public class BookService { // => spring bean
 
     private BookRepository bookRepository;
 
-    private ObjectMapper objectMapper;
+    private UserRepository userRepository;
 
     @Autowired
-    public BookService(BookRepository bookRepository, ObjectMapper objectMapper) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository) {
         this.bookRepository = bookRepository;
-        this.objectMapper = objectMapper;
+        this.userRepository = userRepository;
     }
 
     public BookDTO getById(int id) {
         Book book = bookRepository.getById(id);
-        return new BookDTO(book.getId(), book.getName(), book.getDescription());
+        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
     }
 
-    public BookDTO create(BookDTO bookDTO) {
-        Book book = bookRepository.create(new
-                Book(bookDTO.getId(), bookDTO.getName(), bookDTO.getDescription()));
-        return new BookDTO(book.getId(), book.getName(), book.getDescription());
+    public BookDTO create(BookCreateDTO request) {
+        User user = userRepository.findById(request.getUserId());
+        Book book = bookRepository.save(new
+                Book(request.getId(), request.getName(), request.getDescription(), user));
+        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
     }
 
-    public BookDTO update(int id, BookDTO bookDTO) {
-        Book book = bookRepository.update(id, new
-                Book(bookDTO.getId(), bookDTO.getName(), bookDTO.getDescription()));
-        return new BookDTO(book.getId(), book.getName(), book.getDescription());
-    }
-
-    public BookDTO updatePartial(int id, BookPartialDTO dto) {
-        Book originalBook = bookRepository.getById(id);
-        Book book = bookRepository.update(id, updateMapper(originalBook, dto));
-        return new BookDTO(book.getId(), book.getName(), book.getDescription());
-    }
-
-    public void delete(int id) {
-        bookRepository.delete(id);
+    public BookDTO update(int id, BookCreateDTO request) {
+        User user = userRepository.findById(request.getUserId());
+        Book book = bookRepository.save(new
+                Book(id, request.getName(), request.getDescription(), user));
+        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
     }
 
     /**
-     *
+     *  chuyền vào gì thì ta update cái đó không thì giữ nguyên giá trị cũ.
+     * @param id
+     * @param dto
+     * @return
+     */
+    public BookDTO updatePartial(int id, BookPartialDTO dto) {
+        Book originalBook = bookRepository.findById(id); // lấy cái book từ database lên
+        Book book = bookRepository.save(updateMapper(originalBook, dto)); // update vào db
+        return new BookDTO(book.getId(), null,
+                book.getName(), book.getDescription());
+    }
+
+    public void delete(int id) {
+        bookRepository.deleteById(id);
+    }
+
+    /**
+     * Map data từ request vào original dto. Nếu request có field có value thì ta map value đấy vào
+     * còn nếu ko ta dữ nguyên giá trị cũ
      * @param originalBook
      * @param dto
      * @return
      */
     public Book updateMapper(Book originalBook, BookPartialDTO dto) {
         Book bookUpdated = new Book();
-        bookUpdated.setId(dto.getId().get());
-        if(dto.getName() == null) {
+        bookUpdated.setId(originalBook.getId());
+        if(dto.getName() == null) { // cả cục optional null
             bookUpdated.setName(originalBook.getName());
-            if(dto.getDescription().isPresent()) {
+            if(dto.getDescription().isPresent()) { // hay là id null
                 bookUpdated.setDescription(dto.getDescription().get());
             } else {
                 bookUpdated.setDescription(null);
