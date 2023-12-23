@@ -1,51 +1,73 @@
 package com.example.bookmanagement.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
-
-//UC1: 1 User - 1 Book
-
-//UC2: 1 User - n Book
-
-//UC3: n User - n Book
 
 @Entity
 @Table(name = "book_user")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
-    private int id;
+    private String id;
+
+    @Column(name = "name")
+    private String name;
 
 //    @Transient // ignore trên mặt db
 //    @JsonIgnore // ignore trên web (postman)
     @OneToMany(mappedBy = "user")
     private List<Book> books;
 
-//    @OneToOne(mappedBy = "user")
-//    private Book book;
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 
-    public void setBook(List<Book> book) {
-        this.books = book;
+    public User(String id, String name, List<Book> books, boolean isDeleted) {
+        this.id = id;
+        this.name = name;
+        this.books = books;
+        this.isDeleted = isDeleted;
     }
 
-    public List<Book> getBook() {
-        return this.books;
+    public User(String id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
-//    @ManyToMany(mappedBy = "users")
-//    private List<Book> books;
+    public User() {
+    }
 
-
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 
     @Override

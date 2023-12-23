@@ -2,126 +2,137 @@ package com.example.bookmanagement.service;
 
 import com.example.bookmanagement.domain.Book;
 import com.example.bookmanagement.domain.User;
-import com.example.bookmanagement.model.BookCreateDTO;
-import com.example.bookmanagement.model.BookDTO;
-import com.example.bookmanagement.model.BookPartialDTO;
+import com.example.bookmanagement.exception.DuplicateIdException;
+import com.example.bookmanagement.exception.NotFoundException;
+import com.example.bookmanagement.mapper.BookMapper;
+import com.example.bookmanagement.model.*;
 import com.example.bookmanagement.repository.BookRepository;
+import com.example.bookmanagement.repository.BookRepositoryCustom;
 import com.example.bookmanagement.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.bookmanagement.service.base.BaseService;
+import com.example.bookmanagement.utils.PaginationUtils;
+import com.example.bookmanagement.utils.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-@Service // stereotype annotation
-public class BookService { // => spring bean
+import java.util.List;
+import java.util.Optional;
 
-    // user => controller => service => repository
+@Service
+public class BookService implements BaseService { // => spring bean
 
-//    @PostConstruct
-//    public void postConstruct() {
-//        System.out.println("Trước khi bean sẵn sàng");
-//    }
+    private BookRepositoryCustom bookRepositoryCustom;
 
     private BookRepository bookRepository;
 
     private UserRepository userRepository;
 
     @Autowired
-    public BookService(BookRepository bookRepository, UserRepository userRepository) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository,
+                        BookRepositoryCustom bookRepositoryCustom) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+        this.bookRepositoryCustom = bookRepositoryCustom;
     }
 
-    public BookDTO getById(int id) {
-        Book book = bookRepository.getById(id);
-        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
+    public BookDTO getById(String id) {
+        UUIDUtils.validateUUID(id);
+        Book book = bookRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Book with id " + id + " not found."));
+        return BookMapper.mapEntityToDTO(book);
     }
 
     public BookDTO create(BookCreateDTO request) {
-        User user = userRepository.findById(request.getUserId());
-        Book book = bookRepository.save(new
-                Book(request.getId(), request.getName(), request.getDescription(), user));
-        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
+        Optional<Book> bookOptional = bookRepository.findById(request.getId());
+        if(bookOptional.isPresent()) {
+            throw new DuplicateIdException("Id " + request.getId() + " duplicate");
+        }
+        Book bookRequest = BookMapper.mapDTOCreationToEntity(request);
+        bookRequest.setDeleted(false);
+        Book book = bookRepository.save(bookRequest);
+        return BookMapper.mapEntityToDTO(book);
     }
 
-    public BookDTO update(int id, BookCreateDTO request) {
-        User user = userRepository.findById(request.getUserId());
-        Book book = bookRepository.save(new
-                Book(id, request.getName(), request.getDescription(), user));
-        return new BookDTO(book.getId(), book.getUser().getId(), book.getName(), book.getDescription());
+    public BookDTO update(String id, BookDTO dto) {
+        User user = null;
+        Book bookOriginal = bookRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Book with id " + id + " not found."));
+        if(dto.getUserId() != null) {
+            user = userRepository.findById(dto.getUserId()).orElseThrow(() ->
+                    new NotFoundException("User with id " + id + " not found."));
+        }
+        dto.setId(id);
+        Book bookRequest = BookMapper.mapDTOtoEntity(dto);
+        bookRequest.setUser(user);
+        bookRequest.setId(id);
+        Book book = bookRepository.save(bookRequest);
+        return BookMapper.mapEntityToDTO(book);
     }
 
-    /**
-     *  chuyền vào gì thì ta update cái đó không thì giữ nguyên giá trị cũ.
-     * @param id
-     * @param dto
-     * @return
-     */
-    public BookDTO updatePartial(int id, BookPartialDTO dto) {
-        Book originalBook = bookRepository.findById(id); // lấy cái book từ database lên
-        Book book = bookRepository.save(updateMapper(originalBook, dto)); // update vào db
-        return new BookDTO(book.getId(), null,
-                book.getName(), book.getDescription());
-    }
-
-    public void delete(int id) {
-        bookRepository.deleteById(id);
-    }
-
-    /**
-     * Map data từ request vào original dto. Nếu request có field có value thì ta map value đấy vào
-     * còn nếu ko ta dữ nguyên giá trị cũ
-     * @param originalBook
-     * @param dto
-     * @return
-     */
-    public Book updateMapper(Book originalBook, BookPartialDTO dto) {
-        Book bookUpdated = new Book();
-        bookUpdated.setId(originalBook.getId());
-        if(dto.getName() == null) { // cả cục optional null
-            bookUpdated.setName(originalBook.getName());
-            if(dto.getDescription().isPresent()) { // hay là id null
-                bookUpdated.setDescription(dto.getDescription().get());
-            } else {
-                bookUpdated.setDescription(null);
+    public BookDTO updatePartial(String id, BookPartialDTO dto) {
+        User user = null;
+        Book bookOriginal = bookRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Book with id " + id + " not found."));
+        if (dto.getUserId() != null) {
+            if (dto.getUserId().isPresent()) {
+                user = userRepository.findById(dto.getUserId().get()).orElseThrow(() ->
+                        new NotFoundException("User with id " + id + " not found."));
             }
         }
-        if(dto.getDescription() == null) {
-            bookUpdated.setDescription(originalBook.getDescription());
-            if(dto.getName().isPresent()) {
-                bookUpdated.setName(dto.getName().get());
-            } else {
-                bookUpdated.setName(null);
-            }
-        }
-        if(dto.getName() != null && dto.getDescription() != null) {
-            if(dto.getName().isPresent()) {
-                bookUpdated.setName(dto.getName().get());
-            } else {
-                bookUpdated.setName(null);
-            }
-            if(dto.getDescription().isPresent()) {
-                bookUpdated.setDescription(dto.getDescription().get());
-            } else {
-                bookUpdated.setDescription(null);
-            }
-        }
-        if(dto.getName() == null && dto.getDescription() == null) {
-            bookUpdated.setName(originalBook.getName());
-            bookUpdated.setDescription(originalBook.getDescription());
-        }
-        return bookUpdated;
+        dto.setId(id);
+        Book bookRequest = BookMapper.mapPatch(bookOriginal, dto);
+        bookRequest.setUser(user);
+        Book book = bookRepository.save(bookRequest); // update vào db
+        return BookMapper.mapEntityToDTO(book);
     }
 
-//    public BookRepository getBookRepository() {
-//        return this.bookRepository;
-//    }
+    public void delete(String id) {
+        UUIDUtils.validateUUID(id);
+        Book originBook = bookRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Book with id " + id + " not found."));
+        originBook.setDeleted(true);
+        bookRepository.save(originBook);
+    }
 
-//    public void print() {
-//        System.out.println("BookService call");
-//    }
+    public BookListDTO getAll(FilterParam filterParam) {
+        PaginationUtils.validatePageAndSize(filterParam.getPage(), filterParam.getSize());
+        Href href = new Href();
+        int totalPage = (int) Math.round((double) bookRepository.getTotalData() / filterParam.getSize());
+        var uri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/books");
+        if (filterParam.getAuthor() != null) {
+            if (filterParam.getAuthor().isPresent()) {
+                uri.path("&author=" + filterParam.getAuthor().get());
+            }
+        }
+        if(filterParam.getPage() > 1) {
+            href.setPrevious(uri.queryParam("page", filterParam.getPage() - 1)
+                    .queryParam("size", filterParam.getSize())
+                    .toUriString());
+        }
+        if(filterParam.getPage() != totalPage) {
+            href.setNext(uri.queryParam("page", filterParam.getPage() + 1)
+                    .queryParam("size", filterParam.getSize())
+                    .toUriString());
+        }
+        List<BookDTO> bookDTOS = BookMapper
+                .mapEntitiesToDTOs(bookRepositoryCustom.findAll(filterParam));
+        href.setSize(String.valueOf(bookDTOS.size()));
+        return new BookListDTO(bookDTOS, href);
+    }
 
-//    @PreDestroy
-//    public void preDestroy() {
-//        System.out.println("Trước khi bean bị xoá");
-//    }
+    public BookDTO borrowBook(String bookId, String userId) {
+        UUIDUtils.validateUUID(bookId);
+        UUIDUtils.validateUUID(userId);
+        Book bookOriginal = bookRepository.findById(bookId).orElseThrow(() ->
+                new NotFoundException("Book with id " + bookId + " not found."));
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("User with id " + userId + " not found."));
+
+        bookOriginal.setUser(user);
+        Book book = bookRepository.save(bookOriginal);
+
+        return BookMapper.mapEntityToDTO(book);
+    }
 }

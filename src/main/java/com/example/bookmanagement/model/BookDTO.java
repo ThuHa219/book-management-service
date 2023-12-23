@@ -1,28 +1,45 @@
 package com.example.bookmanagement.model;
 
+import java.util.UUID;
+
 public class BookDTO {
 
-    private int id;
-    private Integer userId;
+    private String id;
+    private String userId;
     private String name;
     private String description;
+    private String author;
 
-    public BookDTO(int id, Integer userId, String name, String description) {
+    public BookDTO(String id, String name, String description, String author) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.author = author;
+    }
+
+    public BookDTO(String id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
+    public BookDTO(String id, String userId, String name, String description, String author) {
         this.id = id;
         this.userId = userId;
         this.name = name;
         this.description = description;
+        this.author = author;
     }
 
     public BookDTO() {
         // do nothing
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
         return this.id;
     }
 
@@ -42,11 +59,19 @@ public class BookDTO {
         return this.description;
     }
 
-    public Integer getUserId() {
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 }

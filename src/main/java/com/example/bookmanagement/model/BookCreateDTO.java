@@ -1,30 +1,30 @@
 package com.example.bookmanagement.model;
 
-import com.example.bookmanagement.domain.User;
+import java.util.UUID;
 
 public class BookCreateDTO {
 
-    private int id;
-    private int userId;
+    private String id;
     private String name;
     private String description;
+    private String author;
 
-    public BookCreateDTO(int id, int userId, String name, String description) {
+    public BookCreateDTO(String id, String name, String description, String author) {
         this.id = id;
-        this.userId = userId;
         this.name = name;
         this.description = description;
+        this.author = author;
     }
 
     public BookCreateDTO() {
         // do nothing
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
         return this.id;
     }
 
@@ -44,20 +44,12 @@ public class BookCreateDTO {
         return this.description;
     }
 
-    public int getUserId() {
-        return userId;
+    public String getAuthor() {
+        return author;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
-
-//    public User getUser() {
-//        return user;
-//    }
-//
-//    public void setUser(User user) {
-//        this.user = user;
-//    }
 }
