@@ -30,6 +30,12 @@ public class User {
         this.isDeleted = isDeleted;
     }
 
+    public User(String id, String name, boolean isDeleted) {
+        this.id = id;
+        this.name = name;
+        this.isDeleted = isDeleted;
+    }
+
     public User(String id, String name) {
         this.id = id;
         this.name = name;
